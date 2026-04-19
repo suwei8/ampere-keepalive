@@ -37,8 +37,6 @@ function requireEnv(name) {
 }
 
 function buildConfig(mode) {
-  const recoverySessionBase64 = requireEnv("SERVICE_JIYUANLIHUIZI_SESSION_B64");
-
   const defaults = {
     autoWake: true,
     autoRecover: false,
@@ -51,6 +49,8 @@ function buildConfig(mode) {
   };
 
   if (mode === "recovery") {
+    const recoverySessionBase64 = requireEnv("SERVICE_JIYUANLIHUIZI_SESSION_B64");
+
     return {
       defaults,
       accounts: [
