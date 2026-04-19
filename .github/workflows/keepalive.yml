@@ -2,12 +2,16 @@ name: Container Keepalive
 
 on:
   schedule:
-    - cron: "7,22,37,52 * * * *"
+    - cron: "7,22,37,52 0-2 * * *"
+    - cron: "7,22,37,52 12-23 * * *"
   workflow_dispatch:
 
 concurrency:
   group: container-keepalive
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   keepalive:
@@ -44,3 +48,21 @@ jobs:
         with:
           name: container-keepalive-${{ github.run_id }}
           path: ./keepalive.log
+
+      - name: Notify Keepalive Failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          {
+            echo "Container Keepalive Failure"
+            echo "Workflow: ${GITHUB_WORKFLOW}"
+            echo "Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            if [ -f ./keepalive.log ]; then
+              echo
+              echo "Log tail:"
+              tail -n 20 ./keepalive.log
+            fi
+          } > ./keepalive-failure.txt
+          node ./scripts/send-telegram.mjs --message-file ./keepalive-failure.txt

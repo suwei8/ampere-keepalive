@@ -21,7 +21,7 @@ function parseArgs(argv) {
     }
   }
 
-  if (!["keepalive", "recovery"].includes(out.mode)) {
+  if (!["keepalive", "recovery", "status"].includes(out.mode)) {
     throw new Error(`Unsupported mode: ${out.mode}`);
   }
 
@@ -41,9 +41,9 @@ function buildConfig(mode) {
     autoWake: true,
     autoRecover: false,
     restartFirst: true,
-    pollMs: mode === "recovery" ? 5000 : 7000,
+    pollMs: mode === "recovery" ? 10000 : 7000,
     wakeTimeoutMs: 180000,
-    recoveryTimeoutMs: mode === "recovery" ? 240000 : 300000,
+    recoveryTimeoutMs: mode === "recovery" ? 1080000 : 300000,
     heartbeatTimeoutMs: 10000,
     ignoreFailure: false,
   };
@@ -61,6 +61,30 @@ function buildConfig(mode) {
           autoRecover: true,
           acceptInProgressTimeout: true,
           restartFirst: true,
+        },
+      ],
+    };
+  }
+
+  if (mode === "status") {
+    const helenpayne261SessionBase64 = requireEnv("SERVICE_HELENPAYNE261_SESSION_B64");
+    const liming737SessionBase64 = requireEnv("SERVICE_LIMING737_SESSION_B64");
+    const recoverySessionBase64 = requireEnv("SERVICE_JIYUANLIHUIZI_SESSION_B64");
+
+    return {
+      defaults,
+      accounts: [
+        {
+          name: "helenpayne261",
+          sessionBase64: helenpayne261SessionBase64,
+        },
+        {
+          name: "liming737",
+          sessionBase64: liming737SessionBase64,
+        },
+        {
+          name: "jiyuanlihuizi",
+          sessionBase64: recoverySessionBase64,
         },
       ],
     };

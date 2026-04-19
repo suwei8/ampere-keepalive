@@ -2,17 +2,20 @@ name: Container Recovery
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "17,47 * * * *"
   workflow_dispatch:
 
 concurrency:
   group: container-recovery
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   recovery:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -31,12 +34,54 @@ jobs:
             --mode recovery \
             --output ./config/accounts.json
 
+      - name: Read Previous Recovery State
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node ./scripts/recovery-state.mjs read --output ./recovery-state-prev.json
+
       - name: Run Recovery
         run: |
           node ./scripts/recover-account.mjs \
             --config ./config/accounts.json \
             --account jiyuanlihuizi \
             --log-file ./recovery.log
+
+      - name: Capture Current Recovery Status
+        if: always()
+        run: |
+          node ./scripts/status-report.mjs \
+            --config ./config/accounts.json \
+            --title "Container Recovery Status" \
+            --json-out ./recovery-status.json \
+            --text-out ./recovery-status.txt
+
+      - name: Evaluate Recovery Transition
+        if: always()
+        id: recovery_transition
+        run: |
+          node ./scripts/recovery-transition.mjs \
+            --previous ./recovery-state-prev.json \
+            --current ./recovery-status.json \
+            --message-out ./recovery-success.txt \
+            --state-out ./recovery-state-next.json
+
+      - name: Notify Recovery Success
+        if: always() && steps.recovery_transition.outputs.notify_recovery == 'true'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          node ./scripts/send-telegram.mjs --message-file ./recovery-success.txt
+
+      - name: Persist Recovery State
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node ./scripts/recovery-state.mjs write --input ./recovery-state-next.json
 
       - name: Upload Logs
         if: always()
