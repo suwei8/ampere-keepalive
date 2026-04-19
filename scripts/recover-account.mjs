@@ -65,6 +65,13 @@ async function main() {
     result = args.dryRun
       ? { ok: true, finalState: "dry-run" }
       : await waitForStateTransition(client, logger, merged, merged.recoveryTimeoutMs, merged.pollMs);
+    if (!args.dryRun && !result.ok && result.finalState === "timeout" && merged.acceptInProgressTimeout) {
+      const observed = result.lastObservedState || state;
+      if (RECOVERY_STATES.has(observed)) {
+        await logger.log(`recover timeout accepted while state remained in-progress: ${observed}`);
+        result = { ok: true, finalState: `in-progress-timeout:${observed}`, payload: result.payload };
+      }
+    }
   } else if (state === "running") {
     result = { ok: true, finalState: "running" };
   } else {

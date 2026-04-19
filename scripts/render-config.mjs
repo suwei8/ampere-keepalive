@@ -59,6 +59,7 @@ function buildConfig(mode) {
           sessionBase64: secondarySessionBase64,
           autoWake: true,
           autoRecover: true,
+          acceptInProgressTimeout: true,
           restartFirst: true,
         },
       ],
