@@ -2,6 +2,7 @@
 config/accounts.json
 config/*-session.json
 *.log
+*.log.*
 *.har
 ampere-session*.json
 
