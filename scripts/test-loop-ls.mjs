@@ -82,6 +82,7 @@ async function wakeAndWait(client, log, { timeoutMs = 600_000, pollMs = 7_000 } 
     "temporarily_unavailable",
     "starting",
     "waking",
+    "restarting",
   ]);
   let currentStatus = "unknown";
   try {
@@ -101,7 +102,7 @@ async function wakeAndWait(client, log, { timeoutMs = 600_000, pollMs = 7_000 } 
       if (!wakeRes.ok) {
         // If the server says we're already in a transient state, that's fine,
         // just fall through to polling.
-        if (!/current status is (queued|creating|starting|waking)/i.test(
+        if (!/current status is (queued|creating|starting|waking|restarting)/i.test(
             wakeRes.text,
           )) {
           return false;
@@ -147,6 +148,10 @@ async function runAccountLoop({ name, session }, args) {
   let totalSendCount = 0;
   let lastCloseCode = null;
   let lastCloseReason = "";
+  // Circuit breaker: count consecutive recovery failures (wake/reconnect that
+  // never reaches a healthy state) and cool down to avoid hammering the API.
+  let recoveryFailures = 0;
+  const RECOVERY_COOLDOWN_MS = 30 * 60 * 1000; // 30 min after 5 strikes
 
   const shutdown = () => {
     stopRequested = true;
@@ -295,8 +300,24 @@ async function runAccountLoop({ name, session }, args) {
       const ready = await wakeAndWait(client, log);
       if (ready) {
         attempt = 0; // fresh start
+        recoveryFailures = 0;
         continue;
       }
+      recoveryFailures += 1;
+      if (recoveryFailures >= 5) {
+        log(
+          `recovery failed ${recoveryFailures}x; cooling down ${Math.round(
+            RECOVERY_COOLDOWN_MS / 60000,
+          )}min before retry (likely upstream infra issue)`,
+        );
+        await new Promise((r) => setTimeout(r, RECOVERY_COOLDOWN_MS));
+        recoveryFailures = 0;
+        attempt = 0;
+        continue;
+      }
+    } else if (promptSeen) {
+      // We had a healthy session for a while; reset failure count.
+      recoveryFailures = 0;
     }
 
     // If the previous connection survived for a while, reset the backoff so
