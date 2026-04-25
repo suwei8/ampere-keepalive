@@ -72,13 +72,44 @@ async function loadAccount(sessionPath) {
   return { name, session, sessionFile: resolved };
 }
 
-async function wakeAndWait(client, log, { timeoutMs = 300_000, pollMs = 7_000 } = {}) {
+async function wakeAndWait(client, log, { timeoutMs = 600_000, pollMs = 7_000 } = {}) {
+  // States that mean the instance is already on its way to "running",
+  // so we just need to poll instead of calling wake again.
+  const transientStates = new Set([
+    "queued",
+    "creating_container",
+    "starting_gateway",
+    "temporarily_unavailable",
+    "starting",
+    "waking",
+  ]);
+  let currentStatus = "unknown";
   try {
     const statusBefore = await client.getStatus();
-    log(`pre-wake status: ${statusBefore.status} ${statusBefore.text.slice(0, 120)}`);
-    const wakeRes = await client.wake();
-    log(`wake call: ${wakeRes.status} ${wakeRes.text.slice(0, 120)}`);
-    if (!wakeRes.ok) return false;
+    try {
+      currentStatus = JSON.parse(statusBefore.text).status;
+    } catch {}
+    log(`pre-wake status=${currentStatus}`);
+
+    if (currentStatus === "running") {
+      return true; // nothing to do
+    }
+    if (!transientStates.has(currentStatus)) {
+      // Need to actually call wake (e.g. status=expired/sleeping).
+      const wakeRes = await client.wake();
+      log(`wake call: ${wakeRes.status} ${wakeRes.text.slice(0, 200)}`);
+      if (!wakeRes.ok) {
+        // If the server says we're already in a transient state, that's fine,
+        // just fall through to polling.
+        if (!/current status is (queued|creating|starting|waking)/i.test(
+            wakeRes.text,
+          )) {
+          return false;
+        }
+      }
+    } else {
+      log(`already in transient state '${currentStatus}'; polling without re-wake`);
+    }
   } catch (error) {
     log(`wake failed: ${error.message || error}`);
     return false;
