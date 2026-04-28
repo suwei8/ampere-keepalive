@@ -69,9 +69,10 @@ node ./scripts/recover-account.mjs \
 
 ## GitHub Actions
 
-Use four repository secrets:
+Use five repository secrets:
 
 - `SERVICE_HELENPAYNE261_SESSION_B64`
+- `SERVICE_LIMING737_SESSION_B64`
 - `SERVICE_JIYUANLIHUIZI_SESSION_B64`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
@@ -82,9 +83,9 @@ The repository keeps only public workflow logic. Runtime config is rendered on t
 
 Workflow layout:
 
-- `.github/workflows/keepalive.yml`: scheduled keepalive for `helenpayne261` and `jiyuanlihuizi`.
+- `.github/workflows/keepalive.yml`: scheduled keepalive for `helenpayne261`, `liming737`, and `jiyuanlihuizi`.
 - `.github/workflows/recovery.yml`: higher-frequency recovery attempts for `jiyuanlihuizi`.
-- `.github/workflows/status-report.yml`: daily status report sent at 10:00 Beijing time.
+- `.github/workflows/status-report.yml`: daily status report for `helenpayne261`, `liming737`, and `jiyuanlihuizi`, sent at 10:00 Beijing time.
 
 ## Notes
 

@@ -24,6 +24,13 @@
       "autoRecover": false,
       "heartbeatCommand": "printf '__KEEPALIVE_HEARTBEAT__\\n'",
       "restartFirst": true
+    },
+    {
+      "name": "liming737",
+      "sessionFile": "/path/to/liming737-session.json",
+      "autoWake": true,
+      "autoRecover": false,
+      "heartbeatCommand": "printf '__KEEPALIVE_HEARTBEAT__\\n'"
     }
   ]
 }
