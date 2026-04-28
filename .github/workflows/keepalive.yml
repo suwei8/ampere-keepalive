@@ -50,6 +50,24 @@ jobs:
           name: container-keepalive-${{ github.run_id }}
           path: ./keepalive.log
 
+      - name: Notify Keepalive Success
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          {
+            echo "Ampere 保活成功"
+            echo "工作流: ${GITHUB_WORKFLOW}"
+            echo "运行地址: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            if [ -f ./keepalive.log ]; then
+              echo
+              echo "执行摘要:"
+              grep -E "start config=|summary " ./keepalive.log || true
+            fi
+          } > ./keepalive-success.txt
+          node ./scripts/send-telegram.mjs --message-file ./keepalive-success.txt
+
       - name: Notify Keepalive Failure
         if: failure()
         env:
