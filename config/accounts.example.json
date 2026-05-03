@@ -31,6 +31,13 @@
       "autoWake": true,
       "autoRecover": false,
       "heartbeatCommand": "printf '__KEEPALIVE_HEARTBEAT__\\n'"
+    },
+    {
+      "name": "gambeearcoraci",
+      "sessionFile": "/path/to/gambeearcoraci-ampere-session.json",
+      "autoWake": true,
+      "autoRecover": false,
+      "heartbeatCommand": "printf '__KEEPALIVE_HEARTBEAT__\\n'"
     }
   ]
 }

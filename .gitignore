@@ -4,5 +4,6 @@ config/*-session.json
 *.log
 *.log.*
 *.har
+*-ampere-session.json
 liming737.json
 ampere-session*.json
