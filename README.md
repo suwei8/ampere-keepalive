@@ -4,7 +4,7 @@ One-shot keepalive and recovery runner for the target container service. It is d
 
 ## What It Does
 
-- Checks multiple accounts in one run.
+- Checks the configured accounts in one run.
 - Wakes instances that are in `sleeping`, `expired`, or `archived`.
 - Optionally runs a lightweight terminal heartbeat command for healthy accounts.
 - Optionally tries `restart` and then `repair` for accounts stuck in `error` or `failed`.
@@ -63,18 +63,15 @@ Manual recovery for one account:
 ```bash
 node ./scripts/recover-account.mjs \
   --config ./config/accounts.json \
-  --account jiyuanlihuizi \
+  --account helenpayne261 \
   --log-file ./recovery.log
 ```
 
 ## GitHub Actions
 
-Use six repository secrets:
+Use three repository secrets:
 
 - `SERVICE_HELENPAYNE261_SESSION_B64`
-- `SERVICE_GAMBEEARCORACI_SESSION_B64`
-- `SERVICE_LIMING737_SESSION_B64`
-- `SERVICE_JIYUANLIHUIZI_SESSION_B64`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 
@@ -84,9 +81,9 @@ The repository keeps only public workflow logic. Runtime config is rendered on t
 
 Workflow layout:
 
-- `.github/workflows/keepalive.yml`: scheduled keepalive for `helenpayne261`, `gambeearcoraci`, `liming737`, and `jiyuanlihuizi`.
-- `.github/workflows/recovery.yml`: higher-frequency recovery attempts for `jiyuanlihuizi`.
-- `.github/workflows/status-report.yml`: daily status report for `helenpayne261`, `gambeearcoraci`, `liming737`, and `jiyuanlihuizi`, sent at 10:00 Beijing time.
+- `.github/workflows/keepalive.yml`: scheduled keepalive for `helenpayne261`.
+- `.github/workflows/recovery.yml`: higher-frequency recovery attempts for `helenpayne261`.
+- `.github/workflows/status-report.yml`: daily status report for `helenpayne261`, sent at 10:00 Beijing time.
 
 ## Notes
 

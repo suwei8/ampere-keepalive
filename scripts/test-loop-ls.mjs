@@ -8,7 +8,6 @@
  *
  * Usage:
  *   node scripts/test-loop-ls.mjs \
- *     --session config/jiyuanlihuizi-session.json \
  *     --session config/helenpayne261-session.json \
  *     --interval 60000
  */
